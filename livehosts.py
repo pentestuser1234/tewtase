@@ -1,35 +1,31 @@
 import re
 
-def extract_ips_from_nmap(filename='nmap.txt'):
-    """Извлекает живые IP-адреса из файла результатов nmap"""
-    ips = []
+def extract_only_ips(filename='nmap.txt'):
+    """Извлекает ТОЛЬКО валидные IP-адреса, исключая домены"""
     
     with open(filename, 'r') as f:
         content = f.read()
     
-    # Паттерн для поиска IP-адресов в выводе nmap
-    # Ищет строки вида "Nmap scan report for hostname (IP)" или просто IP
-    ip_pattern = r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
+    # Паттерн для строгой проверки IP-адресов
+    # Проверяем что каждая октет в диапазоне 0-255
+    ip_pattern = r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
     
     matches = re.findall(ip_pattern, content)
     
-    # Убираем дубликаты, сохраняя порядок
-    seen = set()
-    unique_ips = []
-    for ip in matches:
-        if ip not in seen:
-            seen.add(ip)
-            unique_ips.append(ip)
+    # Удаляем дубликаты
+    unique_ips = list(dict.fromkeys(matches))
     
     return unique_ips
 
 # Использование
-ips = extract_ips_from_nmap('nmap.txt')
-print(f"Найдено {len(ips)} уникальных IP:")
+ips = extract_only_ips('nmap.txt')
+print(f"Найдено {len(ips)} уникальных IP-адресов:\n")
 for ip in ips:
     print(ip)
 
-# Сохранить в файл для дальнейшего использования
+# Сохраняем в файл
 with open('live_ips.txt', 'w') as f:
     for ip in ips:
         f.write(ip + '\n')
+
+print(f"\nРезультат сохранен в live_ips.txt")
